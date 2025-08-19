@@ -1,0 +1,103 @@
+---
+title: "PDF Data TILT Information"
+format: html
+---
+
+## Purpose
+
+Data scientists and statisticians must be able to take data that is in its natural, messy form and transform it into tidy data, making and documenting the transformations and considering their impact on inference and interpretation of the data.
+Many organizations release data in PDF format that they do not release in a more standard text-based format (CSV, XLSX, XML, etc.), and sometimes, it is necessary to extract information from these PDF files. 
+This lab is designed to help you practice the skills necessary to extract data from PDFs, so that if you are ever in an unfortunate situation where you need to extract data from a PDF file, you have some familiarity with the tools and the process. 
+
+### Skills
+
+This assignment will help you practice the following skills which are important for being able to access and work with PDF files:
+
+- Identify the type of PDF file
+- Develop a strategy for accessing the data, determining whether it is necessary to use OCR, text-processing, or other tools to get the data out of the PDF file. 
+- Extract the text data from the PDF file
+- Clean and format the extracted text to produce tabular data for analysis
+    - Data cleaning and wrangling skills
+    - Text processing and regular expression skills
+- Implement quality control checks to correct common errors which occur during the extraction process
+
+### Knowledge
+
+This assignment will help you to become familiar with important knowledge in this discipline:
+
+- PDF file structure (which is important for making accessible documents in addition to OCR and data extraction) and formats
+- Use of new libraries to accomplish a task (tesseract, tabulapdf, camelot, etc.)
+
+
+
+## Success Criteria
+
+### General Criteria
+
+- [ ] Student's name is included at top of assignment
+- [ ] Document compiles on a different machine
+- [ ] Compiled document is formatted well
+- [ ] All code in the document is contained in appropriately formatted code chunks
+- [ ] Compiled document does not include long sections of printed data, making use of `head` and `tail` commands to show only a few rows of data during data cleaning.
+- [ ] Student answers are below the `---` separator and above the next prompt, or in cases where questions are enumerated, student answers are indicated using the quote indicator, `> ` and the placeholder text `Your answer here` has been removed and replaced with the answer. 
+
+
+### Task specific Criteria
+
+1. Warming Up
+    1. PDF Format
+        - [ ] PDF file type is identified correctly
+        - [ ] Processing approach is described correctly and justified based on the PDF format type
+    2. PDF Structure
+        - [ ] Answer addresses consistency of data structure in the PDF across years and departments
+        - [ ] list includes 3-5 reasonable problems which must be overcome to get well-formatted data from the pdf tables
+        - [ ] Screenshots (if included) use appropriate markdown syntax, captions, and hyperlinks
+        - [ ] Discussion of problems includes a targeted explanation of why PDF data extraction is challenging due to the data format
+    3. Plan of Attack
+        - [ ] Strategy addresses the problems identified in the previous step and is realistic. 
+        - [ ] Relevant tools and functions are included in the plan of attack.
+        - [ ] Explanation of why the strategy minimizes the amount of post-processing (error correction) is reasonable. 
+    4. Acquiring Metadata
+        - [ ] PDF library is used to get metadata information from each PDF
+        - [ ] Functional approach is used to construct the metadata table
+        - [ ] At least two anomalies are identified in the metadata
+        - [ ] Reasonable explanations for the anomalies are proposed. 
+        - [ ] Explanations for unfamiliar components of the metadata are provided.
+    5. Anomalies and Strategy Adjustments
+        - [ ] Relevant differences in metadata across files are identified and evaluated
+        - [ ] Explanation of evaluation of whether differences are problematic is reasonable
+        - [ ] Code chunk (if provided) explores the anomalies in a sensible way
+2. Extracting the Text
+    1. Identify Relevant Pages
+        - [ ] Function is written according to specifications -- argument is path, returns pages (either start and end or page range) that have tables
+        - [ ] Table is created with columns as specified
+        
+    2. Read in Relevant Text
+        - [ ] `read_salary_data` function created with arguments `file`, `start`, `end`
+        - [ ] Within the function, only pages between start and end are returned
+        - [ ] Process is reasonable for 2025-26 feport
+        - [ ] function calls `pdf_text` or `read_pdf`
+    3. Plan Your Approach
+        - [ ] List of processing steps is sufficiently detailed to transform text vector into a table with the appropriate columns.
+        - [ ] Steps which are not generalizable are indicated
+        - [ ] Information which is sacrificed is identified clearly
+        - [ ] Answer is properly formatted
+    4. Would Coordinates Help?
+        - [ ] Abstract idea of coordinates for each piece of text is explored
+        - [ ] Reasonable compare/contrast to text vector method is provided
+    5. Explore Package Documentation
+        - [ ] Function to provide coordinates for each text component is identified in either R or Python
+        - [ ] Steps are clearly identified to make use of coordinate information for table processing
+        - [ ] Challenges for working with coordinate data identified
+    6. A Classical Problem
+        - [ ] Salary data obtained for all Classics department employees over 4 reports
+        - [ ] Salary data is formatted for analysis
+        - [ ] Plot comparing salaries over years for each individual is present and contains labels and a title
+        - [ ] Individual salary plot is described with 2-4 sentences
+        - [ ] Plot containing total budget broken out by faculty, administration, and staff  is present and contains labels and a title
+        - [ ] Overall budget plot is described with 2-4 sentences
+        - [ ] Questions provided are addressed in long-form responses with references to the plot. Answers are within the context of the data and the environment in which the data was collected.
+    7. Quality Control
+        - [ ] Answer accounts for other facets of the data not present within a single department
+        - [ ] Answer and reasoning are explained within the context of the problem
+        - [ ] QC measures proposed are reasonable and address problems identified. 

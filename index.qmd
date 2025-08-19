@@ -1,0 +1,182 @@
+---
+title: "Lab: PDF Data"
+author: "Your Name Here"
+format: html
+number-sections: true
+number-depth: 2
+---
+
+::: callout
+You can see the purpose of this assignment as well as the skills and knowledge you should be using and acquiring, in the [Transparency in Learning and Teaching (TILT)](tilt.qmd) document in this repository. The TILT document also contains a checklist for self-reflection that will provide some guidance on how the assignment will be graded. 
+:::
+
+# Data Source
+The University of Nebraska publishes the operating budgets by department on an annual basis on [the UN System business and finance office website](https://nebraska.edu/offices-policies/business-finance/budget-and-planning), with [an archive page that contains budgets from previous fiscal years](https://nebraska.edu/offices-policies/business-finance/budget-and-planning/archive).
+
+With impending system-wide budget cuts, our goal is to extract salary data as well as job position data, to determine how much of the cost growth is attributable to growth in administrator salaries, faculty salaries, staff salaries, and other costs. 
+
+I have preemptively included 4 budget reports in this repository, spaced at 5 year intervals, but you are welcome to include more years if you  would like to do so. 
+The budget reports are lengthy (each report is between 1350 and 1500 pages, and that is just for city campus -- it does not include IANR, the law school, the dental college, etc.). 
+
+# Warming Up
+
+## PDF Format
+
+What type of PDF files are these? Based on the format, what would you have to do to process the PDFs and extract text and/or tabular information (in broad terms)? 
+
+> your answer here
+
+
+----
+
+## PDF Structure
+
+Take a look at the provided PDFs in your default PDF viewer (acrobat, reader, chrome, xPDF, etc). Do they have a consistent structure across years? Across departments? Make a list of at least 3-5 problems you expect to have to overcome if you scrape data from the PDFs. Include screenshots where it is relevant to do so (similar to Fig 34.4 in the textbook), and make sure your images are included using appropriate markdown syntax, captions, and hyperlinks. Discuss how you might overcome these problems and why the PDF format leads to processing challenges. 
+
+----
+
+List here
+
+----
+
+> Supporting screenshots/discussion here
+
+----
+
+## Plan of Attack
+
+What strategy would you use to read in the budget data to minimize the amount of post-processing you need to do? Explain your reasoning. 
+
+----
+
+> Strategy here
+
+> Explanation
+
+----
+
+## Acquiring Metadata
+
+Use a PDF library to programmatically examine each PDF. Use a functional approach, and organize the metadata in a table, with one row per file. Do you notice any anomalies or unfamiliar metadata components which might be important? Propose a possible hypothesis for any anomalies you discover, and research/explain any unfamiliar terms in the metadata that you identified.
+
+----
+
+> Code chunk should replace this line
+
+----
+
+> Your response to open-ended questions goes here
+
+----
+
+## Anomalies and Strategy Adjustments
+
+Considering what you discovered in the previous step, do you need to adjust your strategy for reading in the data? Why or why not? Investigate any differences in metadata values across files, and determine whether or not the variation(s) may pose problems for your analysis. 
+
+
+----
+
+> Code chunk should replace this line (delete line and break if not needed)
+
+
+----
+
+> Your response to open-ended questions goes here
+
+
+----
+
+# Extracting the Text
+
+Now that you've examined the metadata and prepared a strategy, let's see if we can extract the text from each budget report. 
+
+## Identify Relevant Pages
+
+Develop a function that takes the path to a PDF file and identifies which pages have tabular salary data on them (e.g. get a range of pages with the salary information). Use your function to create a table with columns `file_name`, `page_start`, and `page_end`. 
+
+
+----
+
+> Code Chunk
+
+
+----
+
+## Read in Relevant Text
+
+Develop a function `read_salary_data(file, start, end)` which will read in all of the salary data from the pages with tables, using the 2025-2026 salary report as a guide. You should not generalize to other years yet. Use the `pdf_text` function in `tabulapdf` (R) or the `read_pdf` function in the `tabula-py` package (python). 
+
+
+----
+
+
+> Code Chunk
+
+----
+
+## Plan your Approach
+
+What processing steps would you use to get the text vectors from this function into a table? Make a detailed list of the necessary steps. Are there any steps you do not think will be consistently successful or generalizable? Is there information your steps sacrifice to read things in cleanly?
+
+
+----
+
+> Your answer should include an ordered list of steps (indent with at least 2 spaces to form a nested list, if necessary), as well as a response to the open-ended questions at the end.
+
+----
+
+
+## Would Coordinates Help?
+
+There are other functions in the tabula software which provide the coordinates of each piece of text. How might this make it easier to ensure tables are read in correctly? 
+
+----
+
+> Your answer
+
+----
+
+## Explore Package Documentation
+
+Find a function that will provide coordinates for each text component, and write out the steps you might use to convert this data into a clean tabular format. What challenges will you face?
+
+----
+
+> Your answer should include an ordered list of steps (indent with at least 2 spaces to form a nested list, if necessary), as well as a response to the open-ended question at the end.
+
+----
+
+## A Classical Problem
+
+Using either approach, get the salary data for all individuals in the Classics department, across all 4 reports (this should require reading in about 2 pages from each report). Plot the salaries of each individual. Generate a second plot of the total budget for the classics department, split by faculty, administration (the chair), and staff (including student workers. What do you notice? 
+
+Your answer should address some of the following questions:
+
+- How has the budget for Classics changed over the last 15 years? 
+- How has the proportional allocation of salaries to faculty, staff, and administration changed? 
+- What do you think is driving that change?
+
+Your plots must include appropriate titles and legends, and be well constructed using an appropriate mapping. 
+Each plot should be accompanied by a 2-4 sentence description. 
+
+
+----
+
+> Code chunk(s)
+
+----
+
+> Overall observations
+
+----
+
+## Quality Control
+
+If you were to process the full set of faculty salary data across all departments, what quality control measures would you use to ensure your functions functioned as expected? Explain your answer and your reasoning.
+
+----
+
+> Your answer and explanation
+
+----
+
