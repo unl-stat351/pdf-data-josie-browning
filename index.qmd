@@ -1,6 +1,6 @@
 ---
 title: "Lab: PDF Data"
-author: "Your Name Here"
+author: "Josie Browning"
 format: html
 number-sections: true
 number-depth: 2
@@ -177,6 +177,3 @@ If you were to process the full set of faculty salary data across all department
 ----
 
 > Your answer and explanation
-
-----
-
