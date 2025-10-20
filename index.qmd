@@ -74,6 +74,7 @@ library(stringr)
 library(dplyr)
 library(tidyr)
 library(xml2)
+library(tibble)
 ```
 
 ```{r}
@@ -168,21 +169,14 @@ Develop a function `read_salary_data(file, start, end)` which will read in all o
 ------------------------------------------------------------------------
 
 ```{r}
-library(tabulapdf)
-library(dplyr)
-library(stringr)
-library(tibble)
-library(purrr)
-
 read_salary_data <- function(file, start, end) {
     pages <- pdf_text(file)
     target_pages <- pages[start:end]
   
-  # Combine into one character vector of lines
-  lines <- str_split(target_pages, "\n") %>%
-    flatten_chr() %>%
-    str_squish() %>%
-    discard(~ .x == "")
+    lines <- str_split(target_pages, "\n") |>
+        flatten_chr() |>
+        str_squish() |>
+        discard(~ .x == "")
     
     lines <- lines[!str_detect(lines, regex("page|budget|department of|2025-2026", ignore_case = TRUE))]
   
@@ -190,19 +184,17 @@ read_salary_data <- function(file, start, end) {
   
     max_cols <- max(map_int(split_lines, length))
   
-    df <- map_dfr(split_lines, ~ as_tibble_row(set_names(lengthen(.x, max_cols), paste0("V", 1:max_cols))))
-  
-    names(df) <- make.names(unlist(df[which.max(rowSums(!is.na(df[1:10,]))),]), unique = TRUE)
-  
-    df[-(1:which.max(rowSums(!is.na(df[1:10,])))), ] |>
-        mutate(file = basename(file), page_start = start, page_end = end) |>
-        relocate(file, page_start, page_end)
+    df <- map_dfr(split_lines, ~ {
+        x <- .x
+        length(x) <- max_cols
+        as_tibble_row(set_names(x, paste0("V", 1:max_cols)))
+  })
 }
 
 
 file <- "pdf_files/unl-department-budget-2025-2026.pdf"
 
-salary_data_2025 <- read_salary_data(file, start = 12, end = 20)
+salary_data_2025 <- read_salary_data(file, start = 24, end = 27) #example pages
 
 head(salary_data_2025)
 ```
