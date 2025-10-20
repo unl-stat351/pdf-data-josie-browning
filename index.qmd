@@ -190,6 +190,7 @@ file <- "pdf_files/unl-department-budget-2025-2026.pdf"
 salary_data_2025 <- read_salary_data(file, start = 24, end = 27) #example pages
 
 head(salary_data_2025, n = 20)
+
 ```
 
 ------------------------------------------------------------------------
@@ -230,7 +231,16 @@ Find a function that will provide coordinates for each text component, and write
 
 ------------------------------------------------------------------------
 
-> Your answer should include an ordered list of steps (indent with at least 2 spaces to form a nested list, if necessary), as well as a response to the open-ended question at the end.
+> The function that I think will work best here is pdf_data, which would give me a large list containing coordinates and other information for each page.
+>
+> 1.  Starting with a large list, I would convert this to a table using bind_rows
+> 2.  Group by page number (number of nested list that each group came from)
+> 3.  All the information we need will be in the "text" variable, so we need to reformat that variable
+>     1.  Pick out preset headers, maybe a new T/F column for if the observation is a header
+>     2.  Divide the other observations (not headers) by x-coordinate, which should theoretically create groups based on their visual indentation, so if header = false, then assign the observation to a new variable group based on different ranges of x-coordinates
+> 4.  Other cleaning tasks to make sure the table is tidy and can handle the NAs that would probably be introduced
+>
+> A challenge with this will probably come with handling all the different lengths of variables. There also might be some manual work in setting up the expected headers that need to be identified, as well as establishing the x-coordinate ranges. My first try would be to see if equal intervals of x ranges works, but that may not work. This would definitely take some trial and error even just setting up a function to do it.
 
 ------------------------------------------------------------------------
 
@@ -248,7 +258,11 @@ Your plots must include appropriate titles and legends, and be well constructed 
 
 ------------------------------------------------------------------------
 
-> Code chunk(s)
+```{r} 
+data <- pdf_data("pdf_files/unl-department-budget-2025-2026.pdf")
+
+df <- bind_rows(data, .id = "page")
+```
 
 ------------------------------------------------------------------------
 
