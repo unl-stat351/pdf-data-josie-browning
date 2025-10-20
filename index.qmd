@@ -98,7 +98,7 @@ extract_meta <- function(file) {
 
 meta_table <- map_dfr(files, extract_meta)
 
-text <- meta_data_clean$metadata |>
+text <- meta_table$metadata |>
   str_split("\n")
 
 head(text)
@@ -145,21 +145,18 @@ Develop a function that takes the path to a PDF file and identifies which pages 
 ------------------------------------------------------------------------
 
 ```{r}
-file <- "pdf_files/unl-department-budget-2025-2026.pdf"
-
-find_page_number <- function(file) {
-  txt <- pdf_text(file)
-  txt_by_page <- map_chr(txt, ~paste(., collapse=" "))
-  which(str_detect(txt_by_page, "[L]"))
+find_pages <- function(file) {
+    txt <- pdf_text(file)
+    txt_by_page <- map_chr(txt, ~ paste(., collapse = " "))
+    salary_pages <- which(str_detect(txt_by_page, regex("salary|wage|position|fte|annual", ignore_case = TRUE)))
+    tibble(
+        file_name = basename(file),
+        page_start = min(salary_pages),
+        page_end = max(salary_pages)
+    )
 }
-
-page_numbers <- map_int(file, find_page_number)
-
-tables <- extract_tables(files[1], page = page_numbers[1],  output = "tibble")[[1]]
-
-head(tables)
-
-
+  
+salary_pages <- map_dfr(files, find_pages)  
 ```
 
 ------------------------------------------------------------------------
@@ -170,7 +167,45 @@ Develop a function `read_salary_data(file, start, end)` which will read in all o
 
 ------------------------------------------------------------------------
 
-> Code Chunk
+```{r}
+library(tabulapdf)
+library(dplyr)
+library(stringr)
+library(tibble)
+library(purrr)
+
+read_salary_data <- function(file, start, end) {
+    pages <- pdf_text(file)
+    target_pages <- pages[start:end]
+  
+  # Combine into one character vector of lines
+  lines <- str_split(target_pages, "\n") %>%
+    flatten_chr() %>%
+    str_squish() %>%
+    discard(~ .x == "")
+    
+    lines <- lines[!str_detect(lines, regex("page|budget|department of|2025-2026", ignore_case = TRUE))]
+  
+    split_lines <- str_split(lines, "\\s{2,}")
+  
+    max_cols <- max(map_int(split_lines, length))
+  
+    df <- map_dfr(split_lines, ~ as_tibble_row(set_names(lengthen(.x, max_cols), paste0("V", 1:max_cols))))
+  
+    names(df) <- make.names(unlist(df[which.max(rowSums(!is.na(df[1:10,]))),]), unique = TRUE)
+  
+    df[-(1:which.max(rowSums(!is.na(df[1:10,])))), ] |>
+        mutate(file = basename(file), page_start = start, page_end = end) |>
+        relocate(file, page_start, page_end)
+}
+
+
+file <- "pdf_files/unl-department-budget-2025-2026.pdf"
+
+salary_data_2025 <- read_salary_data(file, start = 12, end = 20)
+
+head(salary_data_2025)
+```
 
 ------------------------------------------------------------------------
 
