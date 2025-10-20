@@ -54,9 +54,9 @@ What strategy would you use to read in the budget data to minimize the amount of
 
 ------------------------------------------------------------------------
 
-> Strategy here
-
-> Explanation
+> Some of the things I want to address first is spacing
+>
+> Knowing that the indentations and odd spacing might cause issues in how columns are read, I think I will need to do something to address the spacing in the metadata. Anything that can be done so that the text data can be more easily read into a tabular structure should probably be done.
 
 ------------------------------------------------------------------------
 
@@ -66,21 +66,47 @@ Use a PDF library to programmatically examine each PDF. Use a functional approac
 
 ------------------------------------------------------------------------
 
-```{r, message=FALSE}
+```{r, message=FALSE, warning=FALSE}
+library(tabulapdf)
 library(pdftools)
+library(purrr)
 library(stringr)
+library(dplyr)
+library(tidyr)
+library(xml2)
+```
 
-pdf_info("pdf_files/unl-department-budget-2010-2011-pt1.pdf")$version
-pdf_text("pdf_files/unl-department-budget-2010-2011-pt1.pdf") |>
-  str_split("\n") |>
-  unlist() |>
-  head(n=10)
+```{r}
+files <- list.files(path = "pdf_files", pattern = ".pdf$", full.names = TRUE)
 
+extract_meta <- function(file) {
+    files_list <- pdf_info(file)
+    
+    meta_table <- as_tibble(files_list) %>%
+        mutate(
+            Author= keys[1],
+            Creator = keys[2],
+            Producer = keys[3],
+            Title = keys[4]
+        ) %>%
+        unnest(everything()) %>%
+        select(-keys) %>% #this is unique for each row, but we only need one row per file
+        distinct()
+    
+    return(meta_table)
+}
+
+meta_table <- map_dfr(files, extract_meta)
+
+text <- meta_data_clean$metadata |>
+  str_split("\n")
+
+head(text)
 ```
 
 ------------------------------------------------------------------------
 
-> Your response to open-ended questions goes here
+> I notice that the meta data looks like xml format. I will need to explore this further to confirm if that's accurate. Looking at the nested structure, it looks like the metadata is contained within different separate files. The "key" variable has different locations(?) listed for each file, so figuring out how to access the data within these files will be the next challenge.
 
 ------------------------------------------------------------------------
 
@@ -90,33 +116,21 @@ Considering what you discovered in the previous step, do you need to adjust your
 
 ------------------------------------------------------------------------
 
+> Yes, I believe I need to adjust how I go about reading the data because I know more about how it is stored now. There is another layer I need to access since the metadata is stored within the "key" variable.
+
 ```{r}
-dir <- "~/Documents/Stat 351/Lab 4 - PDF/pdf_files"
-pdfs <- paste(dir, "/", list.files(dir, pattern = "*.pdf"), sep = "")
+meta_table$linearized
 
-pdfs_text <- map(pdfs, pdf_text)
+meta_table$Creator
 
-read_PDF <- function(file){
+meta_table$Producer
 
-    pdfs_text <- pdf_text(file)
-    converted <- Corpus(VectorSource(pdfs_text)) %>%
-          DocumentTermMatrix()
-    converted %>%
-          tidy() %>%
-          filter(!grepl("[0-9]+", term)) %>%
-
-          # add FileName as a column
-          mutate(FileName = file)
-}
-
-final <- map(pdfs, read_PDF) %>% data.table::rbindlist()
-
-
+meta_table$Title
 ```
 
 ------------------------------------------------------------------------
 
-> Your response to open-ended questions goes here
+> It looks like there is some differences between the files, likely due to them being created over a long period of time and therefore requiring different version/types of programs. The most recent pdf uses Abode Acrobat instead of Acrobat Distiller or PScript5, which could cause issues. Another notable difference is that only two files are linearized (2015 and 2020). After some reseach I understand that linearized pdfs have internal structures that are designed to have pages load faster for viewing, versus all the pages loading first before they can be viewed. As of right now, I believe that this will not cause any issues in how r handles the pdfs. 
 
 ------------------------------------------------------------------------
 
@@ -130,7 +144,23 @@ Develop a function that takes the path to a PDF file and identifies which pages 
 
 ------------------------------------------------------------------------
 
-> Code Chunk
+```{r}
+file <- "pdf_files/unl-department-budget-2025-2026.pdf"
+
+find_page_number <- function(file) {
+  txt <- pdf_text(file)
+  txt_by_page <- map_chr(txt, ~paste(., collapse=" "))
+  which(str_detect(txt_by_page, "[L]"))
+}
+
+page_numbers <- map_int(file, find_page_number)
+
+tables <- extract_tables(files[1], page = page_numbers[1],  output = "tibble")[[1]]
+
+head(tables)
+
+
+```
 
 ------------------------------------------------------------------------
 
