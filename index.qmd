@@ -54,9 +54,9 @@ What strategy would you use to read in the budget data to minimize the amount of
 
 ------------------------------------------------------------------------
 
-> Some of the things I want to address first is spacing
+> Some of the things I want to address first is understanding how the data will be read in. Exploring the metadata could reveal some useful information on how the pdfs should be handled. The general formatting is what I think is going to be the biggest hurdle, which is expected with pdfs.
 >
-> Knowing that the indentations and odd spacing might cause issues in how columns are read, I think I will need to do something to address the spacing in the metadata. Anything that can be done so that the text data can be more easily read into a tabular structure should probably be done.
+> Knowing that the indentations and odd spacing might cause issues in how columns are read, I'm not sure if there is anything I can do to minimize having to clean stuff up and address the spacing in the post-process. Anything that can be done so that the text data can be more easily read into a tabular structure should probably be done.
 
 ------------------------------------------------------------------------
 
@@ -102,7 +102,7 @@ meta_table <- map_dfr(files, extract_meta)
 text <- meta_table$metadata |>
   str_split("\n")
 
-head(text)
+#head(text)
 ```
 
 ------------------------------------------------------------------------
@@ -131,7 +131,7 @@ meta_table$Title
 
 ------------------------------------------------------------------------
 
-> It looks like there is some differences between the files, likely due to them being created over a long period of time and therefore requiring different version/types of programs. The most recent pdf uses Abode Acrobat instead of Acrobat Distiller or PScript5, which could cause issues. Another notable difference is that only two files are linearized (2015 and 2020). After some reseach I understand that linearized pdfs have internal structures that are designed to have pages load faster for viewing, versus all the pages loading first before they can be viewed. As of right now, I believe that this will not cause any issues in how r handles the pdfs. 
+> It looks like there is some differences between the files, likely due to them being created over a long period of time and therefore requiring different version/types of programs. The most recent pdf uses Abode Acrobat instead of Acrobat Distiller or PScript5, which could cause issues. Another notable difference is that only two files are linearized (2015 and 2020). After some research I understand that linearized pdfs have internal structures that are designed to have pages load faster for viewing, versus all the pages loading first before they can be viewed. As of right now, I believe that this will not cause any issues in how r handles the pdfs.
 
 ------------------------------------------------------------------------
 
@@ -181,22 +181,15 @@ read_salary_data <- function(file, start, end) {
     lines <- lines[!str_detect(lines, regex("page|budget|department of|2025-2026", ignore_case = TRUE))]
   
     split_lines <- str_split(lines, "\\s{2,}")
-  
-    max_cols <- max(map_int(split_lines, length))
-  
-    df <- map_dfr(split_lines, ~ {
-        x <- .x
-        length(x) <- max_cols
-        as_tibble_row(set_names(x, paste0("V", 1:max_cols)))
-  })
+    
+    df <- tibble(text = unlist(split_lines))
 }
-
 
 file <- "pdf_files/unl-department-budget-2025-2026.pdf"
 
 salary_data_2025 <- read_salary_data(file, start = 24, end = 27) #example pages
 
-head(salary_data_2025)
+head(salary_data_2025, n = 20)
 ```
 
 ------------------------------------------------------------------------
@@ -207,7 +200,17 @@ What processing steps would you use to get the text vectors from this function i
 
 ------------------------------------------------------------------------
 
-> Your answer should include an ordered list of steps (indent with at least 2 spaces to form a nested list, if necessary), as well as a response to the open-ended questions at the end.
+> I got ahead of myself a little bit and already got the data into a table, which I did by turning the strings into digestible lines that can be formatted as rows in a table. That being said, the rows are very messy and have a lot of variables and information are packed into single cells. So to go about reformatted this data into a usable table, here are my next steps:
+>
+> 1.  May need to manually set what I want the headers to be
+>
+> 2.  Split up columns
+>
+>     1.  Delimit by semi-column, there will still be a lot of stuff to split up later
+>
+> 3.  Pivot wider, use set headers so that the variables are set up properly
+>
+> 4.  Delimit anything else that needs to be split up, probably by space with special conditions
 
 ------------------------------------------------------------------------
 
@@ -217,7 +220,7 @@ There are other functions in the tabula software which provide the coordinates o
 
 ------------------------------------------------------------------------
 
-> Your answer
+> My understanding of text coordinates is that they are the x-y position of a piece of text on a pdf page. So the tabula software would create two variables that could tell you the "location" of text on the page as it was originally meant to be displayed. This would be very helpful because this location-based reading would place text in a much more coherent order than how the pdf text is often read in using pdf-text or other pdftools function.
 
 ------------------------------------------------------------------------
 
