@@ -76,6 +76,7 @@ library(tidyr)
 library(xml2)
 library(tibble)
 library(readr)
+library(ggplot2)
 ```
 
 ```{r}
@@ -285,31 +286,69 @@ classics_pages <- bind_rows(df1, df2, df3, df4, .id = NULL)
 #y range to remove: 0-132
 
 classics_lines <- classics_pages %>%
-    filter((x >= 0 & x <= 385) | (x >= 720 & x <= 775),
-           y >= 153)
+    filter((x >= 0 & x <= 386) | (x >= 720 & x <= 775),
+           y >= 153) %>%
     group_by(id, page, y) %>% #group by line, or observations with the same y
     summarise(line = paste(text, collapse = " "), .groups = "drop")
 
-titles <- c("Professor", "Associate Professor", "Graduate Teaching Asst", "Chairperson", "Student Worker", "Assistant Professor", "Assistant Professor of Practice", "Associate Professor of Practice", "Sr. Lecturer", "Staff Secy III")
+classics_lines$y[141] <- 182 #manual change because the y line did not line up
+
+titles <- c("Professor", "Assistant Professor of Practice", "Associate Professor of Practice", "Associate Professor", "Graduate Teaching Asst", "Chairperson", "Student Worker", "Assistant Professor", "Sr. Lecturer", "Staff Secy III")
 #found these manually bc I couldn't figure it out
 title_pattern <- paste(titles, collapse = "|")
-
+     
 classics_dpt <- classics_lines %>%
+    group_by(id, page, y) %>%
+    summarise(line = paste(line, collapse = " "),
+            salary = as.numeric(gsub(",", "", 
+                                     unlist(str_extract_all(line, "\\d{1,3}(?:,\\d{3})+")))), #pull out salaries
+            .groups = "drop")
+
+classics_dpt <- classics_dpt %>%
+    mutate(line = str_remove_all(line, "\\d{1,3}(?:,\\d{3})+"),
+           line = str_squish(line),
+           title = str_extract(line, title_pattern), #extract titles if found
+           line  = ifelse(!is.na(title), str_remove(line, fixed(title)), line)) %>% #remove titles from line obs
+    filter(!str_detect(line, "\\d"), #remove obs that have id numbers 
+           !str_detect(line, "^[A-Z\\s[:punct:]]+$")) #remove obs with only capitol letters
+
+classics_dpt_clean <- classics_dpt %>%
+    group_by(id) %>%
     mutate(
-        name = str_extract(line, "[A-Z][A-Za-z'\\-]+,\\s+[A-Z][A-Za-z\\.\\s\\-]{1,60}"),
-        extracted_title = str_extract(line, title_pattern),
-        title = extracted_title,
-        name = str_remove(name, title_pattern) |> str_squish())
+    total = str_detect(line, "\\bTOTAL\\b"), #true if "TOTAL" appears
+    line = str_remove_all(line, "\\bTOTAL\\b"), #remove "TOTAL" wherever it appears
+    line = str_squish(line)) %>% #clean up extra spaces
+    group_by(line) %>%
+    mutate(title = first(na.omit(title))) %>% #fill in NAs within each person group
+    ungroup() %>%
+    na.omit(title)
 
+classics_dpt_clean <- classics_dpt_clean %>%
+    group_by(line, id) %>%
+    filter(!(any(total) & !total)) %>% #identify totals so there are not duplicate salaries
+    ungroup() %>%
+    select(-y) %>%
+    distinct()
 
-    fill(name, title, .direction = "downup") %>%
-    select(-extracted_title)
+classics_dpt_clean
+```
 
-people_salaries <- classics_dpt %>%
-    filter(str_detect(line, "TOTAL")) %>%
-    na.omit(name)
+```{r, warning=FALSE}
+avg_salaries <- classics_dpt_clean %>%
+  group_by(line) %>%
+  summarise(
+    avg_salary = mean(salary, na.rm = TRUE),
+    title = title) %>%
+    distinct()
 
-#very unfinished
+ggplot(avg_salaries, aes(x = reorder(line, avg_salary), y = avg_salary, fill = title)) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    title = "Classics Department Salaries",
+    x = "Faculty/Staff",
+    y = "Salary",
+    fill = "Title")
 ```
 
 ------------------------------------------------------------------------
