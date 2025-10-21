@@ -279,27 +279,31 @@ df4 <- bind_rows(data_list[5], .id = "page") %>%
 
 classics_pages <- bind_rows(df1, df2, df3, df4, .id = NULL)
 
-classics_lines <- classics_pages %>%
-  group_by(id, page, y) %>% #group by line, or observations with the same y
-  summarise(line = paste(text, collapse = " "), .groups = "drop")
+#locate_areas(files[1], pages = 104)
+#name/title column range: 210-385
+#salary column range: 720-775
+#y range to remove: 0-132
 
+classics_lines <- classics_pages %>%
+    filter((x >= 0 & x <= 385) | (x >= 720 & x <= 775),
+           y >= 153)
+    group_by(id, page, y) %>% #group by line, or observations with the same y
+    summarise(line = paste(text, collapse = " "), .groups = "drop")
+
+titles <- c("Professor", "Associate Professor", "Graduate Teaching Asst", "Chairperson", "Student Worker", "Assistant Professor", "Assistant Professor of Practice", "Associate Professor of Practice", "Sr. Lecturer", "Staff Secy III")
+#found these manually bc I couldn't figure it out
+title_pattern <- paste(titles, collapse = "|")
 
 classics_dpt <- classics_lines %>%
-  filter(str_detect(line, "\\d{1,3}(?:,\\d{3})+")) %>% #numeric that have commas, like 210,010
-  mutate(
-      salary_text = str_extract(line, "\\d{1,3}(?:,\\d{3})+"),
-      salary = parse_number(salary_text),
-      name = str_extract(line, "[A-Z][A-Za-z'\\-]+,\\s+[A-Z][A-Za-z\\.\\s\\-]{1,60}"),
-      title = str_extract(line,
-       "(?i)\\b(Professor|Associate Professor|Graduate Teaching Asst|Chairperson|Student Worker|Assistant Professor| Assistant Professor of Practice|Associate Professor of Practice|Sr. Lecturer|Staff Secy III )\\b")
-  ) #found these manually bc I couldn't figure it out
-#issue write now is dealing with subtotals/multiple rows for each faculty
+    mutate(
+        name = str_extract(line, "[A-Z][A-Za-z'\\-]+,\\s+[A-Z][A-Za-z\\.\\s\\-]{1,60}"),
+        extracted_title = str_extract(line, title_pattern),
+        title = extracted_title,
+        name = str_remove(name, title_pattern) |> str_squish())
 
-classics_dpt <- classics_dpt %>%
-  group_by(name) %>%
-  mutate(title = if_else(all(is.na(title)), 
-                         NA_character_, first(na.omit(title)))) %>%   #fill titles for people w multiple rows
-  ungroup()
+
+    fill(name, title, .direction = "downup") %>%
+    select(-extracted_title)
 
 people_salaries <- classics_dpt %>%
     filter(str_detect(line, "TOTAL")) %>%
